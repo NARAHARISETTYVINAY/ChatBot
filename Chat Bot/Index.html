@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Mood Suggestion Chatbot</title>
+    
+    <!-- Load Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Utility class for hiding elements */
+        .hidden {
+            display: none !important; /* Ensure it overrides other display properties */
+        }
+
+        /* Apply Inter font to the body */
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #552c84, #310f54); /* from-purple-800 to-indigo-900 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            color: white;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        /* Main container for the chatbot interface */
+        .chat-main-container {
+            background-color: rgba(45, 55, 72, 0.7); /* bg-gray-800 bg-opacity-70 */
+            border-radius: 1rem; /* rounded-2xl */
+            padding: 2rem; /* p-8 */
+            max-width: 600px; /* max-w-4xl adjusted for better fit */
+            width: 100%;
+            margin: 0 auto; /* mx-auto */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+            border: 1px solid #4a5568; /* border border-gray-700 */
+            backdrop-filter: blur(5px); /* backdrop-blur-sm */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Chatbot title */
+        .chatbot-title {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: bold; /* font-bold */
+            text-align: center; /* text-center */
+            margin-bottom: 1.5rem; /* mb-6 */
+            color: #d8b4fe; /* text-purple-300 */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* drop-shadow-lg */
+        }
+
+        /* Styling for movie cards, including gradient background, border, shadow, backdrop-filter, and fade-in animation */
+        .movie-card {
+            background: linear-gradient(135deg, #374151, #1f2937); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1rem; /* p-4 */
+            text-align: center; /* text-center */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+        }
+        /* Movie card hover effect */
+        .movie-card:hover {
+            transform: scale(1.05); /* hover:scale-105 */
+        }
+
+        /* Keyframe animation for fading in elements */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styling for the chat box, including fixed height, scrollability, padding, border-radius, background, and flex properties */
+        .chat-box {
+            height: 400px; /* Fixed height for the chat display area */
+            overflow-y: auto; /* Enable vertical scrolling */
+            scroll-behavior: smooth; /* Smooth scrolling for new messages */
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.75rem;
+            background-color: rgba(31, 41, 55, 0.8); /* Slightly transparent dark background */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Space between chat messages */
+            flex-grow: 1; /* flex-grow */
+        }
+        /* Base styling for individual chat messages */
+        .chat-message {
+            max-width: 85%; /* Limit message width */
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            word-wrap: break-word; /* Ensure long words wrap */
+        }
+        /* Specific styling for bot messages */
+        .bot-message {
+            align-self: flex-start; /* Align bot messages to the left */
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            border-bottom-left-radius: 0.25rem; /* Rounded corner on one side only */
+        }
+        /* Specific styling for user messages */
+        .user-message {
+            align-self: flex-end; /* Align user messages to the right */
+            background-color: #6366f1; /* Indigo-500 */
+            color: white;
+            border-bottom-right-radius: 0.25rem; /* Rounded corner on one side only */
+        }
+        /* Styling for the container holding movie suggestions */
+        .movie-suggestions-container {
+            align-self: flex-start; /* Align suggestions to the left */
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        /* Styling for movie title in card */
+        .movie-card h4 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            margin-bottom: 0.5rem; /* mb-2 */
+            color: #e9d5ff; /* text-purple-200 */
+        }
+        /* Styling for YouTube link button */
+        .youtube-link-button {
+            display: inline-flex; /* inline-flex */
+            align-items: center; /* items-center */
+            justify-content: center; /* justify-center */
+            background-color: #dc2626; /* bg-red-600 */
+            color: white;
+            font-weight: 500; /* font-medium */
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            border-radius: 9999px; /* rounded-full */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            transition: transform 0.3s ease; /* transition-transform */
+            font-size: 0.875rem; /* text-sm */
+            text-decoration: none; /* Remove underline from link */
+            border: none; /* Remove default button border */
+            cursor: pointer;
+        }
+        /* YouTube link button hover effect */
+        .youtube-link-button:hover {
+            background-color: #b91c1c; /* hover:bg-red-700 */
+            transform: scale(1.05); /* hover:scale-105 */
+        }
+        /* YouTube link button focus effect */
+        .youtube-link-button:focus {
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.75); /* focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 */
+        }
+        /* SVG icon within the button */
+        .youtube-link-button svg {
+            width: 1rem; /* w-4 */
+            height: 1rem; /* h-4 */
+            margin-right: 0.25rem; /* mr-1 */
+            fill: currentColor; /* Ensure SVG color matches text */
+        }
+
+        /* Loading indicator styling */
+        #loading-indicator {
+            text-align: center; /* text-center */
+            font-size: 1.125rem; /* text-lg */
+            color: #e9d5ff; /* text-purple-200 */
+            margin-top: 0.5rem; /* mt-2 */
+            margin-bottom: 1rem; /* mb-4 */
+            display: block; /* Ensure it displays as a block when not hidden */
+        }
+
+        /* Error message styling */
+        #error-message {
+            text-align: center; /* text-center */
+            color: #fca5a5; /* text-red-400 */
+            font-size: 1.125rem; /* text-lg */
+            padding: 0.5rem; /* p-2 */
+            background-color: rgba(127, 29, 29, 0.3); /* bg-red-900 bg-opacity-30 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #b91c1c; /* border border-red-700 */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+
+        /* User input section container */
+        .user-input-section {
+            display: flex; /* flex */
+            flex-direction: row; /* flex-row */
+            align-items: center; /* items-center */
+            gap: 1rem; /* gap-4 */
+            margin-top: 1rem; /* mt-4 */
+        }
+
+        /* Text input field styling */
+        #mood-text-input {
+            flex-grow: 1; /* flex-grow */
+            padding: 0.75rem 1.25rem; /* px-5 py-3 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 1.125rem; /* text-lg */
+            color: #1a202c; /* text-gray-900 */
+            background-color: #e2e8f0; /* bg-gray-200 */
+            outline: none; /* focus:outline-none */
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+            border: 1px solid transparent; /* Default border */
+        }
+        /* Text input focus styling */
+        #mood-text-input:focus {
+            border-color: #4f46e5; /* Focus ring color */
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 0 0 4px rgba(79, 70, 229, 0.75); /* focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-75 */
+        }
+
+        /* Send button styling */
+        #send-mood-button {
+            padding: 0.75rem 1.5rem; /* px-6 py-3 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            flex-shrink: 0; /* flex-shrink-0 */
+            border: none; /* Remove default button border */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease; /* Transition for hover */
+        }
+        /* Send button hover effect */
+        #send-mood-button:hover {
+            background-color: #4338ca; /* hover:bg-indigo-700 */
+        }
+        /* Send button focus effect */
+        #send-mood-button:focus {
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.75); /* focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-75 */
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Main container for the chatbot interface -->
+    <div class="chat-main-container">
+        <!-- Chatbot title -->
+        <h1 class="chatbot-title">
+            🎥 Mood Flix Chatbot
+        </h1>
+
+        <!-- Chat messages display area -->
+        <div id="chat-box" class="chat-box">
+        </div>
+
+        <!-- Loading indicator for when the bot is thinking -->
+        <div id="loading-indicator" class="hidden">
+            🎬 Looking for movies... Please wait!
+        </div>
+
+        <!-- Error message display area -->
+        <div id="error-message" class="hidden">
+            <!-- Error messages will be displayed here -->
+        </div>
+
+        <!-- User input section (text input and send button) -->
+        <div class="user-input-section">
+            <input
+                type="text"
+                id="mood-text-input"
+                placeholder="Type your mood here (e.g., happy, sad, chill, stressed)..."
+            />
+            <button
+                id="send-mood-button"
+            >
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const chatBox = document.getElementById('chat-box');
+        const moodTextInput = document.getElementById('mood-text-input');
+        const sendMoodButton = document.getElementById('send-mood-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorMessageDiv = document.getElementById('error-message');
+        let selectedMood = null; // Variable to store the currently selected mood for display
+
+        // Hardcoded movie suggestions based on mood
+        const hardcodedSuggestions = {
+            "happy": [
+                { title: "Chhichhore", youtubeLink: "https://youtu.be/3Q1yTBHjwXc?si=iOFJyUBEWnMJzsK0" },
+                { title: "The Intern", youtubeLink: "https://youtu.be/9nW43btAGr0?si=sU6WExkBQe0xDN8h" },
+                { title: "Julie & Julia", youtubeLink: "https://youtu.be/SDNK8lT0lxs?si=SVQ_3QS25NVuZGk9" }
+            ],
+            "sad": [
+                { title: "Grief", youtubeLink: "https://youtu.be/10_vyWNNawA?si=n4j3RphEScnpXpZ0" },
+                { title: "Tulsa", youtubeLink: "https://youtu.be/q4-vMp77Z8o?si=7Zk8wJWmq3PPMHR1" },
+                { title: "Idhuvum Kadandhu Pogum", youtubeLink: "https://youtu.be/UstJCj5r2dw?si=EGpLHZixFOTnsrBh" }
+            ],
+            "chill": [
+                { title: "3 Doors from Paradise", youtubeLink: "https://youtu.be/ebgueBf1sHw?si=HEC5fOjZ4fWjBGeT" },
+                { title: "Emotional Family Drama", youtubeLink: "https://youtu.be/vannCaV-ptQ?si=swpzThuXcS3s8fRN" },
+                { title: "Once Upon a Time in Mongolia", youtubeLink: "https://youtu.be/0RXBqrJpYBc?si=EByxr9-ctbHnlKzw" }
+            ],
+            "stressed": [
+                { title: "Cecil", youtubeLink: "https://youtu.be/rRuwJch-6c4?si=UcNU8xs4ITBCJzB2" },
+                { title: "Let There Be Light", youtubeLink: "https://youtu.be/OfKlDwj1TP4?si=s_QhxyFEYN48IhFl" },
+                { title: "Diamond Dog Caper", youtubeLink: "https://youtu.be/MkjMrzT6TvA?si=Zy1gxUfsHoZENMJd" }
+            ]
+        };
+
+        // Function to toggle the visibility of an element
+        function toggleVisibility(element, show) {
+            if (show) {
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+
+        // Function to display a message in the chat box
+        function displayMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom to show the latest message
+        }
+
+        // Function to display an error message
+        function displayError(message) {
+            errorMessageDiv.textContent = `🚨 Error: ${message}`;
+            toggleVisibility(errorMessageDiv, true);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom to show the error
+        }
+
+        // Function to clear any existing error messages
+        function clearError() {
+            toggleVisibility(errorMessageDiv, false);
+            errorMessageDiv.textContent = '';
+        }
+
+        // Function to handle user input from the text field
+        async function handleUserInput(inputText) {
+            const trimmedInput = inputText.trim();
+            const lowercasedInput = trimmedInput.toLowerCase();
+
+            // Validate input
+            if (!trimmedInput) {
+                displayError("Please enter something in the text box.");
+                return;
+            }
+
+            // Display user's message
+            displayMessage(trimmedInput, 'user'); 
+            moodTextInput.value = ''; // Clear input field
+            clearError(); // Clear any previous errors
+
+            // Handle "hi" and "thanks" greetings directly
+            if (lowercasedInput === "hi") {
+                displayMessage("Hello! I'm your Movie Mood Chatbot. Tell me how you're feeling (e.g., happy, sad, chill, stressed) and I'll suggest some movies for you!", 'bot');
+                moodTextInput.focus(); // Keep focus on the input
+                return; 
+            }
+
+            if (lowercasedInput === "thanks") {
+                displayMessage("You're welcome! Glad I could help. Let me know if you need more suggestions.", 'bot');
+                moodTextInput.focus(); // Keep focus on the input
+                return;
+            }
+
+            // Fetch movie suggestions for other inputs
+            await fetchMovieSuggestions(trimmedInput);
+        }
+
+        // Function to fetch and display movie suggestions based on mood
+        async function fetchMovieSuggestions(mood) {
+            const normalizedMood = mood.toLowerCase(); 
+
+            // Show loading indicator
+            toggleVisibility(loadingIndicator, true);
+
+            // Disable input and button during fetching
+            moodTextInput.disabled = true;
+            sendMoodButton.disabled = true;
+
+            try {
+                // Simulate a network delay for better user experience
+                await new Promise(resolve => setTimeout(resolve, 800)); 
+
+                // Retrieve hardcoded movies for the given mood
+                const movies = hardcodedSuggestions[normalizedMood];
+
+                if (movies && movies.length > 0) {
+                    selectedMood = mood; // Store the mood for display
+                    displayMovieSuggestions(movies);
+                } else {
+                    // Inform the user if no suggestions are found for the mood
+                    displayMessage(`Sorry, I don't have specific movie suggestions for "${mood}" mood yet. Try "happy", "sad", "chill", or "stressed".`, 'bot');
+                }
+            } catch (err) {
+                // Log and display any errors during the process
+                console.error("Error fetching movie suggestions:", err);
+                displayError(`An unexpected error occurred: ${err.message}. Please try again later.`);
+            } finally {
+                // Hide loading indicator and re-enable input/button
+                toggleVisibility(loadingIndicator, false); 
+                moodTextInput.disabled = false;
+                sendMoodButton.disabled = false;
+                moodTextInput.focus(); // Return focus to the input field
+            }
+        }
+
+        // Function to render movie suggestions in the chat box
+        function displayMovieSuggestions(movies) {
+            if (movies.length === 0) {
+                displayError("No movie suggestions were returned for this mood.");
+                return;
+            }
+
+            // Create a container for the movie suggestions
+            const movieSuggestionsContainer = document.createElement('div');
+            // Apply bot-message styling to the container
+            movieSuggestionsContainer.className = "movie-suggestions-container bot-message";
+            movieSuggestionsContainer.innerHTML = `<h3 class="movie-suggestions-heading">
+                                                        Here are some movies for a "${selectedMood}" mood:
+                                                    </h3>
+                                                    <div class="movie-cards-grid"></div>`; // Grid for movie cards
+
+            const movieCardsGrid = movieSuggestionsContainer.querySelector('.movie-cards-grid');
+            movieCardsGrid.style.display = 'grid';
+            movieCardsGrid.style.gridTemplateColumns = '1fr'; /* single column layout */
+            movieCardsGrid.style.gap = '1rem'; /* gap-4 */
+
+
+            // Iterate through movies and create a card for each
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                // Styling for individual movie cards, with hover effects
+                movieCard.className = "movie-card";
+                movieCard.innerHTML = `
+                    <h4 class="movie-card-title">
+                        ${movie.title}
+                    </h4>
+                    <a
+                        href="${movie.youtubeLink}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="youtube-link-button"
+                    >
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19.615 3.184c-1.792-.114-6.398-.273-9.615-.273S4.177 3.07 2.385 3.184C.592 3.298 0 3.966 0 5.412v11.176c0 1.446.592 2.114 2.385 2.228 1.792.114 6.398.273 9.615.273s7.823-.159 9.615-.273c1.792-.114 2.385-.782 2.385-2.228V5.412c0-1.446-.592-2.114-2.385-2.228zM9 15.5v-7l7 3.5-7 3.5z" />
+                        </svg>
+                        Play
+                    </a>
+                `;
+                movieCardsGrid.appendChild(movieCard);
+            });
+            chatBox.appendChild(movieSuggestionsContainer);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom to show new suggestions
+        }
+
+        // Event listener for the send button
+        sendMoodButton.addEventListener('click', () => {
+            handleUserInput(moodTextInput.value);
+        });
+
+        // Event listener for the Enter key in the text input
+        moodTextInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                handleUserInput(moodTextInput.value);
+            }
+        });
+
+        // Initial message from the chatbot when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            displayMessage("Welcome! I'm your Movie Mood Chatbot. Type your mood (e.g., happy, sad, chill, stressed) or 'Hi' to learn more about my services.", 'bot');
+            moodTextInput.focus(); // Set focus on the input field for immediate typing
+        });
+    </script>
+</body>
+</html>
